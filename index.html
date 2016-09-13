@@ -1,0 +1,130 @@
+<html>
+    <head>
+        <style type="text/css">
+            #imagePreview {
+                width: 698px;
+                height: 960px;
+            }
+        </style>
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/css/materialize.min.css"
+                               />
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="row">
+                <div class="imageholder col s12 m9 l9">
+                    <canvas id="imagePreview" width="698" height="960"></canvas>
+                </div>
+                <div class="controls col s12 m3 l3">
+                    <div class="row">
+                        <form action="#">
+                            <div class="file-field input-field">
+                                <div class="btn">
+                                    <span>File</span>
+                                    <input type="file" id="image">
+                                </div>
+                                <div class="file-path-wrapper">
+                                    <input class="file-path validate" type="text">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="row center">
+                        <a href="#" id="download" class="btn">Download</a>
+                    </div>
+            </div>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>
+        <script>
+            window.onload = function () {
+                var canvas = document.getElementById('imagePreview');
+                var image = new Image();
+
+                image.onload = function () {
+                    var ctx = canvas.getContext("2d");
+                    ctx.drawImage(image, 0, 0);
+                };
+
+                image.src = '/images/bg.jpg';
+            };
+
+            function handleFileSelect(evt) {
+                var file = evt.target.files[0]; // FileList object
+                var canvas = document.getElementById('imagePreview');
+                var image = new Image;
+                var grey = false;
+
+                window.onload();
+
+                image.addEventListener("load", function () {
+                    var ctx = canvas.getContext("2d");
+                    var ratio = calculateAspectRatioFit(image.width, image.height, 598, 785);
+
+                    if (!grey) {
+                        image.src = gray(image);
+                        grey = true;
+                    }
+
+                    ctx.drawImage(
+                        image,
+                        50 + ((598-ratio.width)/2),
+                        50 + ((735-ratio.height)/2),
+                        ratio.width,
+                        ratio.height
+                    );
+                }, false);
+
+
+                image.src = URL.createObjectURL(file);
+            }
+
+            function gray(imgObj) {
+                var canvas = document.createElement('canvas');
+                var canvasContext = canvas.getContext('2d');
+
+                var imgW = imgObj.width;
+                var imgH = imgObj.height;
+                canvas.width = imgW;
+                canvas.height = imgH;
+
+                canvasContext.drawImage(imgObj, 0, 0);
+                var imgPixels = canvasContext.getImageData(0, 0, imgW, imgH);
+
+                for(var y = 0; y < imgPixels.height; y++){
+                    for(var x = 0; x < imgPixels.width; x++){
+                        var i = (y * 4) * imgPixels.width + x * 4;
+                        var avg = (imgPixels.data[i] + imgPixels.data[i + 1] + imgPixels.data[i + 2]) / 3;
+                        imgPixels.data[i] = avg;
+                        imgPixels.data[i + 1] = avg;
+                        imgPixels.data[i + 2] = avg;
+                    }
+                }
+                canvasContext.putImageData(imgPixels, 0, 0, 0, 0, imgPixels.width, imgPixels.height);
+                return canvas.toDataURL();
+            }
+
+            function calculateAspectRatioFit(srcWidth, srcHeight, maxWidth, maxHeight) {
+                var ratio = Math.min(maxWidth / srcWidth, maxHeight / srcHeight);
+
+                return { width: srcWidth*ratio, height: srcHeight*ratio };
+            }
+
+            function downloadCanvas(link, canvasId, filename) {
+                link.href = document.getElementById(canvasId).toDataURL();
+                link.download = filename;
+            }
+
+            /**
+            * The event handler for the link's onclick event. We give THIS as a
+            * parameter (=the link element), ID of the canvas and a filename.
+            */
+            document.getElementById('download').addEventListener('click', function() {
+                console.log('will download');
+                downloadCanvas(this, 'imagePreview', 'rethink.png');
+            }, false);
+
+            document.getElementById('image')
+                .addEventListener('change', handleFileSelect, false);
+        </script>
+    </body>
+</html>
